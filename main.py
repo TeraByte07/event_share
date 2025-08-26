@@ -1,0 +1,25 @@
+from fastapi import FastAPI
+from sqlalchemy import text
+from app.routes.user import router as auth_router
+from app.routes.admin import admin_router as admin_router
+from app.routes.event import router as event_router
+from db import Base, engine, SessionLocal
+from config import settings
+from fastapi.staticfiles import StaticFiles
+import os
+import app.models
+
+app = FastAPI()
+os.makedirs(os.path.join(settings.MEDIA_DIR, "avi"), exist_ok=True)
+app.mount("/static/avi", StaticFiles(directory=os.path.join(settings.MEDIA_DIR, "avi")), name="avi")
+app.mount(
+    "/static/event_banners",
+    StaticFiles(directory=os.path.join(settings.MEDIA_DIR, "event_banners")),
+    name="event_banners"
+)
+# Include routers
+
+Base.metadata.create_all(bind=engine)
+app.include_router(auth_router)
+app.include_router(admin_router)
+app.include_router(event_router)
