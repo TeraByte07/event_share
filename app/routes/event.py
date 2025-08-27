@@ -68,3 +68,37 @@ def get_event(
 ):
     service = EventService(db)
     return service.get_single_event(event_id, token)
+
+@router.get(
+    "/event_manager/all",
+    response_model=GenericResponseModel[list[EventResponse]]
+)
+def get_all_events(
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db)
+):
+    service = EventService(db)
+    return service.get_events(token)
+
+@router.delete(
+    "/delete/{event_id}",
+    response_model=GenericResponseModel[str]
+)
+def delete_event(
+    event_id: str,
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db)
+):
+    service = EventService(db)
+    return service.delete_event(event_id, token)
+
+@router.delete(
+    "/delete_all",
+    response_model=GenericResponseModel[str]
+)
+def delete_all_events(
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db)
+):
+    service = EventService(db)
+    return service.delete_all_events(token)

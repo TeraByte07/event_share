@@ -170,3 +170,70 @@ class EventService:
             message="Event retrieved successfully.",
             data=jsonable_encoder(event_data)
         )
+
+    def get_events(self, token: str):
+        organizer = self.get_event_manager(token=token, db=self.db)
+        events = (
+            self.db.query(Events)
+            .filter(Events.organizer_id == organizer.id)
+            .all()
+        )
+
+        if not events:
+            return self.GenerateResponse(
+                status_code=status.HTTP_404_NOT_FOUND,
+                message="No events found."
+            )
+
+        events_data = [EventResponse.from_orm(event) for event in events]
+        return self.GenerateResponse(
+            status_code=status.HTTP_200_OK,
+            message="Events retrieved successfully.",
+            data=jsonable_encoder(events_data)
+        )
+    
+    def delete_event(self, event_id: str, token: str):
+        organizer = self.get_event_manager(token=token, db=self.db)
+        event = (
+            self.db.query(Events)
+            .filter(Events.id == event_id, Events.organizer_id == organizer.id)
+            .first()
+        )
+
+        if not event:
+            return self.GenerateResponse(
+                status_code=status.HTTP_404_NOT_FOUND,
+                message="Event not found."
+            )
+        if event.banner_url:
+            self.delete_file(event.banner_url)
+        self.db.delete(event)
+        self.db.commit()
+
+        return self.GenerateResponse(
+            status_code=status.HTTP_200_OK,
+            message="Event deleted successfully."
+        )
+    
+    def delete_all_events(self, token: str):
+        organizer = self.get_event_manager(token=token, db=self.db)
+        events = (
+            self.db.query(Events)
+            .filter(Events.organizer_id == organizer.id)
+            .all()
+        )
+
+        if not events:
+            return self.GenerateResponse(
+                status_code=status.HTTP_404_NOT_FOUND,
+                message="No events found to delete."
+            )
+        for event in events:
+            if event.banner_url:
+                self.delete_file(event.banner_url)
+            self.db.delete(event)
+        self.db.commit()
+        return self.GenerateResponse(
+            status_code=status.HTTP_200_OK,
+            message="All events deleted successfully."
+        )
