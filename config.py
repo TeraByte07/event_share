@@ -1,4 +1,5 @@
 from pydantic_settings import BaseSettings
+import os
 
 class Settings(BaseSettings):
     SECRET_KEY: str
@@ -6,7 +7,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int
     REFRESH_TOKEN_EXPIRE_MINUTES: int
     DATABASE_URL: str
-    MEDIA_DIR: str
+    MEDIA_DIR: str = os.path.join(os.path.dirname(os.path.abspath(__file__)), "uploads")
 
     class Config:
         env_file = ".env"

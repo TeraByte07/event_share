@@ -49,7 +49,7 @@ def get_profile(current_user: User = Depends(AdminService.get_current_admin_user
     return {
         "message": "Profile fetched successfully!",
         "data": {
-            "uuid": current_user.id,
+            "id": current_user.id,
             "email": current_user.email,
             "role": current_user.role,
             "username": current_user.username,

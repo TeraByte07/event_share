@@ -29,10 +29,10 @@ class UserService:
     def GenerateResponse(self, status_code:int, message:str, data:Optional[dict] = None):
         return JSONResponse(
             status_code=status_code,
-            content={
+            content=jsonable_encoder({
                 "message": message,
-                "data": jsonable_encoder(data)
-            }
+                "data": data
+            })
         )
     def get_current_user(self, token: str, db: Session):
         payload = decode_access_token(token, db)
@@ -111,8 +111,10 @@ class UserService:
                 status_code = status.HTTP_401_UNAUTHORIZED,
                 message="Invalid email or password."
             )
-        access_token = create_access_token({"sub": user.id})
-        refresh_token = create_refresh_token({"sub": user.id})
+        
+        user_id = str(user.id)
+        access_token = create_access_token({"sub": user_id})
+        refresh_token = create_refresh_token({"sub": user_id})
         data = {
             "username": user.username,
             "email": user.email,
@@ -151,6 +153,7 @@ class UserService:
             os.makedirs(upload_dir, exist_ok=True)
             filepath = os.path.join(upload_dir, file_name)
 
+            avi_file.file.seek(0) 
             with open(filepath, "wb") as buffer:
                 shutil.copyfileobj(avi_file.file, buffer)
 
@@ -160,20 +163,11 @@ class UserService:
         self.db.refresh(current_user)
 
         # ✅ Return exactly what ProfileResponseWrapper expects
-        return {
-            "message": "Profile updated successfully.",
-            "data": {
-                "uuid": current_user.id,
-                "email": current_user.email,
-                "role": current_user.role,
-                "is_active": current_user.is_active,
-                "created_at": current_user.created_at,
-                "updated_at": current_user.updated_at,
-                "username": current_user.username,
-                "full_name": current_user.full_name,
-                "avi": current_user.avi,
-            }
-        }
+        return self.GenerateResponse(
+                status_code=status.HTTP_200_OK,
+                message="Profile updated successfully.",
+                data=ProfileResponse.model_validate(current_user)
+            )
 
 
     def logout_user(self, token: str, db: Session):

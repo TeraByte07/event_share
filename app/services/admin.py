@@ -29,10 +29,10 @@ class AdminService:
     def GenerateResponse(self, status_code:int, message:str, data:Optional[dict] = None):
         return JSONResponse(
             status_code=status_code,
-            content={
+            content=jsonable_encoder({
                 "message": message,
                 "data": data
-            }
+            })
         )
     oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/admin/login")
     @staticmethod
@@ -105,9 +105,15 @@ class AdminService:
                 status_code=status.HTTP_403_FORBIDDEN,
                 message="Access denied. Admins only."
             )
-        access_token = create_access_token({"sub": user.id})
-        refresh_token = create_refresh_token({"sub": user.id})
+
+        # ✅ force UUID to str before using in token
+        user_id = str(user.id)
+
+        access_token = create_access_token({"sub": user_id})
+        refresh_token = create_refresh_token({"sub": user_id})
+
         data = {
+            "user_id": user_id,
             "username": user.username,
             "email": user.email,
             "role": user.role,
@@ -120,6 +126,7 @@ class AdminService:
             message="Login successful.",
             data=data
         )
+
 
     def update_profile(self, user_data: AdminProfileModel, token: str, db: Session, avi_file: Optional[UploadFile] = None):
         current_user = AdminService.get_current_admin_user(token=token, db=db)

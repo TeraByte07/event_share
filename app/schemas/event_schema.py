@@ -17,7 +17,7 @@ class EventUpdate(BaseModel):
 
 class EventUpdateResponse(EventUpdate):
     id: uuid.UUID
-    organizer_id: str
+    organizer_id: uuid.UUID
     banner_url: Optional[str] = None
     created_at: datetime
     updated_at: datetime
@@ -27,7 +27,7 @@ class EventUpdateResponse(EventUpdate):
 
 class EventResponse(EventBase):
     id: uuid.UUID
-    organizer_id: str
+    organizer_id: uuid.UUID
     banner_url: Optional[str] = None
     created_at: datetime
     updated_at: datetime

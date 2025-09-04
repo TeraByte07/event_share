@@ -3,7 +3,7 @@ from typing import Optional, List
 from enum import Enum
 from typing import Optional,Generic, TypeVar
 from datetime import datetime
-
+from uuid import UUID
 class UserRole(str, Enum): 
     event_manager = "event_manager"
     participant = "participant"
@@ -20,7 +20,7 @@ class ProfileModel(BaseModel):
     avi: Optional[str] = None
     
 class ProfileResponse(ProfileModel):
-    id: str
+    id: UUID
     email: EmailStr
     role: UserRole
     is_active: bool

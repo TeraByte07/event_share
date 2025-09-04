@@ -22,11 +22,7 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
     user_service = UserService(db)
     return user_service.login_user(user)
 
-@router.put(
-    "/profile/update",
-    response_model=ProfileResponseWrapper,
-    status_code=status.HTTP_200_OK,
-)
+@router.put("/profile/update", response_model=GenericResponseModel[ProfileResponse])
 def update_profile(
     username: Optional[str] = Form(None),
     full_name: Optional[str] = Form(None),
@@ -41,6 +37,7 @@ def update_profile(
         db=db,
         avi_file=avi,
     )
+
 
 @router.get("/profile/me", response_model=ProfileResponseWrapper)
 def get_profile(

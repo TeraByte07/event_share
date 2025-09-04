@@ -3,7 +3,7 @@ from typing import Optional, List
 from enum import Enum
 from typing import Optional,Generic, TypeVar
 from app.schemas.user import ProfileModel, ProfileResponse
-
+from uuid import UUID
 class AdminRole(str, Enum):
     admin = "admin"
 
@@ -34,7 +34,7 @@ class AdminProfileModel(BaseModel):
     avi: Optional[str] = None
 
 class AdminProfileResponse(AdminProfileModel):
-    uuid: str
+    id: UUID
     email: EmailStr
     role: AdminRole
     full_name: str
@@ -52,7 +52,7 @@ class AdminUserRole(str, Enum):
     participant = "participant"
 
 class AdminGetUserProfileOut(BaseModel):
-    id: str
+    id: UUID
     email: str
     username: str
     role: AdminUserRole
