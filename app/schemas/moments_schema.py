@@ -11,7 +11,7 @@ class MomentType(str, Enum):
     video = "video"
 
 class MomentBase(BaseModel):
-    event_id: str = Field(..., description="ID of the associated event")
+    event_id: uuid.UUID = Field(..., description="ID of the associated event")
     content: str = Field(..., description="Content of the moment")
     media_url: Optional[str] = Field(None, description="URL of the media associated with the moment")
     type: MomentType = Field(..., description="Type of the moment")
@@ -26,3 +26,6 @@ class MomentUpdate(BaseModel):
 
 class MomentResponse(MomentBase):
     pass
+
+    class Config:
+        from_attributes = True

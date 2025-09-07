@@ -3,6 +3,7 @@ from sqlalchemy import text
 from app.routes.user import router as auth_router
 from app.routes.admin import admin_router as admin_router
 from app.routes.event import router as event_router
+from app.routes.moments_routes import router as moments_router
 from db import Base, engine, SessionLocal
 from config import settings
 from fastapi.staticfiles import StaticFiles
@@ -23,3 +24,4 @@ Base.metadata.create_all(bind=engine)
 app.include_router(auth_router)
 app.include_router(admin_router)
 app.include_router(event_router)
+app.include_router(moments_router)
