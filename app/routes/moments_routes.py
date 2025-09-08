@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File,
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from app.services.moments_services import MomentService
-from app.schemas.moments_schema import MomentBase, MomentResponse
+from app.schemas.moments_schema import MomentBase, MomentResponse, MomentUpdate, MomentUpdateResponse
 from app.schemas.user import GenericResponseModel
 from db import get_db
 from fastapi.security import OAuth2PasswordBearer
@@ -55,6 +55,35 @@ def get_moments_by_events(
             detail=response["message"]
         )
     return GenericResponseModel[List[MomentResponse]](
+        status_code=response["status_code"],
+        message=response["message"],
+        data=response["data"]
+    )
+
+@router.put("/{id}/update", response_model=GenericResponseModel[MomentUpdateResponse])
+def update_moment(
+    id: uuid.UUID,
+    content: Optional[str] = Form(None),
+    type: Optional[str] = Form(None),
+    media_file: Optional[UploadFile] = File(None),
+    token: str = Depends(OAuth2PasswordBearer(tokenUrl="/auth/login")),
+    db: Session = Depends(get_db),
+    request: Request = None
+):
+    moment_data = MomentUpdate(
+        content=content,
+        type=type
+    )
+    service = MomentService(db)
+    user_service = UserService(db)
+    user = user_service.get_current_user(token=token, db=db)
+    response = service.update_moment(id, moment_data, user, token, media_file)
+    if response["status_code"] != status.HTTP_200_OK:
+        raise HTTPException(
+            status_code=response["status_code"],
+            detail=response["message"]
+        )
+    return GenericResponseModel[MomentResponse](
         status_code=response["status_code"],
         message=response["message"],
         data=response["data"]

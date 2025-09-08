@@ -1,5 +1,5 @@
 from app.models.moments_models import Moment
-from app.schemas.moments_schema import MomentBase, MomentResponse
+from app.schemas.moments_schema import MomentBase, MomentResponse, MomentUpdate
 from app.schemas.user import GenericResponseModel
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status, UploadFile
@@ -92,11 +92,50 @@ class MomentService():
             message="Moments retrieved successfully.",
             data=[MomentResponse.from_orm(moment) for moment in moments]
         )
-
-    def get_moment_by_id(self, moment_id: UUID):
-        moment = self.db.query(Moment).filter(Moment.id == moment_id).first()
-        if not moment_id:
+    
+    def update_moment(self, id: UUID, moment_data: MomentUpdate, user: User, token: str, media_file: UploadFile = None):
+        moment = self.db.query(Moment).filter(Moment.id == id, Moment.user_id == user.id).first()
+        if not moment:
             return self.GenerateResponse(
                 status_code=status.HTTP_404_NOT_FOUND,
-                message="Moment not found."
+                message="Moment not found or you do not have permission to update it."
             )
+        if moment_data.type and moment_data.type in ["image", "video"] and not media_file:
+            return self.GenerateResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                message=f"Media file is required for moment type '{moment_data.type}'."
+            )
+        if moment_data.type and moment_data.type == "text" and media_file:
+            return self.GenerateResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                message="Media file should not be provided for moment type 'text'."
+            )
+        
+        if moment_data.content is not None:
+            moment.content = moment_data.content
+        if moment_data.type is not None:
+            moment.type = moment_data.type
+        moment.updated_at = datetime.utcnow()
+
+        if media_file:
+            file_extension = os.path.splitext(media_file.filename)[1]
+            if file_extension.lower() not in [".jpg", ".jpeg", ".png", ".gif", ".mp4", ".mov", ".avi"]:
+                return self.GenerateResponse(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    message="Unsupported media file type."
+                )
+            unique_filename = f"{uuid.uuid4()}{file_extension}"
+            upload_dir = os.path.join("media", "moments")
+            os.makedirs(upload_dir, exist_ok=True)
+            file_path = os.path.join(upload_dir, unique_filename)
+            with open(file_path, "wb") as buffer:
+                shutil.copyfileobj(media_file.file, buffer)
+            moment.media_url = f"/static/moments/{unique_filename}"
+            
+        self.db.commit()
+        self.db.refresh(moment)
+        return self.GenerateResponse(
+            status_code=status.HTTP_200_OK,
+            message="Moment updated successfully.",
+            data=MomentResponse.from_orm(moment)
+        )

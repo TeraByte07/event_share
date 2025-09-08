@@ -25,7 +25,13 @@ class MomentUpdate(BaseModel):
     type: Optional[MomentType] = Field(None, description="Updated type of the moment")
 
 class MomentResponse(MomentBase):
-    pass
+    id: uuid.UUID
+
+    class Config:
+        from_attributes = True
+
+class MomentUpdateResponse(MomentUpdate):
+    id: uuid.UUID
 
     class Config:
         from_attributes = True
