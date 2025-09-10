@@ -88,3 +88,45 @@ def update_moment(
         message=response["message"],
         data=response["data"]
     )
+
+@router.get("/mymoment/{id}", response_model=GenericResponseModel[MomentResponse])
+def get_my_moment(
+    id: uuid.UUID,
+    db: Session = Depends(get_db),
+    request: Request = None
+):
+    service = MomentService(db)
+    user_service = UserService(db)
+    user = user_service.get_current_user(db=db)
+    response = service.get_moment_by_id(id)
+    if response["status_code"] != status.HTTP_200_OK:
+        raise HTTPException(
+            status_code=response["status_code"],
+            detail=response["message"]
+        )
+    return GenericResponseModel[MomentResponse](
+        status_code=response["status_code"],
+        message=response["message"],
+        data=response["data"]
+    )
+
+@router.delete("/{id}/delete", response_class=GenericResponseModel[None])
+def delete_moment(
+    id: uuid.UUID,
+    db: Session = Depends(get_db),
+    token: str = Depends(OAuth2PasswordBearer(tokenUrl="/auth/login"))
+):
+    service = MomentService(db)
+    user_service = UserService(db)
+    user = user_service.get_current_user(token=token, db=db)
+    response = service.delete_moment(id, user, token=token)
+    if response["status_code"] != status.HTTP_200_OK:
+        raise HTTPException(
+            status_code=response["status_code"],
+            detail=response["message"]
+        )
+    return GenericResponseModel[None](
+        status_code=response["status_code"],
+        message=response["message"],
+        data=None
+    )

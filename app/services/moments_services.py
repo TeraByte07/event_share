@@ -131,11 +131,44 @@ class MomentService():
             with open(file_path, "wb") as buffer:
                 shutil.copyfileobj(media_file.file, buffer)
             moment.media_url = f"/static/moments/{unique_filename}"
-            
+
         self.db.commit()
         self.db.refresh(moment)
         return self.GenerateResponse(
             status_code=status.HTTP_200_OK,
             message="Moment updated successfully.",
             data=MomentResponse.from_orm(moment)
+        )
+
+    def get_moment_by_id(self, id: UUID):
+        moment = self.db.query(Moment).filter(Moment.id == id).first()
+        if not moment:
+            return self.GenerateResponse(
+                status_code=status.HTTP_404_NOT_FOUND,
+                message="Moment not found."
+            )
+        
+        return self.GenerateResponse(
+            status_code=status.HTTP_200_OK,
+            message="Moment retrieved successfully.",
+            data=MomentResponse.from_orm(moment)
+        )
+
+    def delete_moment(self, id:UUID, user: User, token: str):
+        moment = self.db.query(Moment).filter(Moment.id == id, Moment.user_id == user.id).first()
+        if not user:
+            return self.GenerateResponse(
+                status_code=status.HTTP_404_NOT_FOUND,
+                message="User not found."
+            )
+        if not moment:
+            return self.GenerateResponse(
+                status_code=status.HTTP_404_NOT_FOUND,
+                message="Moment not found or you do not have permission to delete it."
+            )
+        self.db.delete(moment)
+        self.db.commit()
+        return self.GenerateResponse(
+            status_code=status.HTTP_200_OK,
+            message="Moment deleted successfully."
         )
